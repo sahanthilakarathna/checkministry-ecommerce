@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { fetchProducts, createOrder } from '../api';
 import { useNavigate } from 'react-router-dom';
-import '../assets/css/OrderCreate.css'; // import the CSS
+import ProductList from '../components/ProductList';
+import '../assets/css/OrderCreate.css';
 
 export default function OrderCreate() {
   const [products, setProducts] = useState([]);
@@ -11,34 +12,41 @@ export default function OrderCreate() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchProducts()
-      .then(setProducts)
-      .catch(err => {
-        console.error(err);
-        setError('Failed to load products');
-      });
+    const controller = new AbortController();
+
+    const loadProducts = async () => {
+      try {
+        const data = await fetchProducts({ signal: controller.signal });
+        setProducts(data);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error(err);
+          setError('Failed to load products');
+        }
+      }
+    };
+
+    loadProducts();
+
+    return () => controller.abort(); // cancel fetch if unmounted
   }, []);
 
-  const toggle = (id) => {
+  const toggle = useCallback((id) => {
     setSelected(prev => {
       const s = new Set(prev);
-      if (s.has(id)) s.delete(id);
-      else s.add(id);
+      s.has(id) ? s.delete(id) : s.add(id);
       return s;
     });
-  };
+  }, []);
 
   const onCreate = async () => {
-    // Clear previous errors
     setError('');
 
-    // Validate order description
     if (!desc.trim()) {
       setError('Order description is required');
       return;
     }
 
-    // Validate at least one product selected
     if (selected.size === 0) {
       setError('Select at least one product to create an order');
       return;
@@ -74,25 +82,12 @@ export default function OrderCreate() {
       </div>
 
       <h3>Select Products</h3>
-      <ul className="product-list">
-        {products.map(p => (
-          <li
-            key={p.id}
-            className={selected.has(p.id) ? 'selected' : ''}
-            onClick={() => toggle(p.id)}
-          >
-            <label>
-              <input
-                type="checkbox"
-                checked={selected.has(p.id)}
-                onChange={() => toggle(p.id)}
-              />
-              <span className="product-name">{p.productname}</span>
-              <span className="product-desc">{p.productdescription}</span>
-            </label>
-          </li>
-        ))}
-      </ul>
+      <ProductList
+        products={products}
+        selected={selected}
+        toggle={toggle}
+        editMode={true} // always selectable in create mode
+      />
 
       <div className="actions">
         <button className="btn-create" onClick={onCreate}>Create Order</button>

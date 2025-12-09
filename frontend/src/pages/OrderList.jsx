@@ -27,7 +27,14 @@ export default function OrderList() {
     return () => { isMounted = false; };
   }, []);
 
-  const filtered = q ? orders.filter(o => String(o.id).includes(q.trim())) : orders;
+  const filtered = q
+  ? orders.filter(o => {
+      const query = q.trim().toLowerCase();
+      const description = (o.orderdescription ?? o.orderDescription ?? '').toLowerCase();
+      return String(o.id).includes(query) || description.includes(query);
+    })
+  : orders;
+
 
   const onDelete = async (e, id) => {
     e.stopPropagation();

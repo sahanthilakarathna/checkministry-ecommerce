@@ -26,17 +26,21 @@ CREATE TABLE OrderProductMap (
 
 
 
-### .env
+### .env Backend(api)
 DATABASE_URL=postgresql://neondb_owner:npg_3WQhVtKPJzn8@ep-tiny-haze-aec64ubm-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 PORT=4000
 
 ### Frontend
-cd client
+cd frontend
 npm install
 npm run dev
 
 ### Backend
-cd server
+cd api
 npm install
 node seedProducts.js 
 npm run dev
+
+
+## DEMO
+https://checkministry-ecommerce.vercel.app/

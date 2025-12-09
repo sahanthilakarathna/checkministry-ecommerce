@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { fetchOrder, updateOrder } from '../api';
 import { useParams, useNavigate } from 'react-router-dom';
+import ProductList from '../components/ProductList';
 import '../assets/css/OrderView.css';
 
 export default function OrderView() {
@@ -14,37 +15,37 @@ export default function OrderView() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    let isMounted = true;
+    const controller = new AbortController();
 
     const loadOrder = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const data = await fetchOrder(id);
-        if (isMounted) {
-          setOrder(data);
-          setDesc(data.orderdescription ?? data.orderDescription);
-          setSelected(new Set((data.products || []).map(p => p.id)));
-        }
+        const data = await fetchOrder(id, { signal: controller.signal });
+        setOrder(data);
+        setDesc(data.orderdescription ?? data.orderDescription);
+        setSelected(new Set((data.products || []).map(p => p.id)));
       } catch (err) {
-        console.error(err);
-        if (isMounted) alert("Failed to load order");
+        if (err.name !== 'AbortError') {
+          console.error(err);
+          alert('Failed to load order');
+        }
       } finally {
-        if (isMounted) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     loadOrder();
-    return () => { isMounted = false; };
+
+    return () => controller.abort();
   }, [id]);
 
-  const toggle = (pid) => {
+  const toggle = useCallback((pid) => {
     setSelected(prev => {
       const s = new Set(prev);
-      if (s.has(pid)) s.delete(pid);
-      else s.add(pid);
+      s.has(pid) ? s.delete(pid) : s.add(pid);
       return s;
     });
-  };
+  }, []);
 
   const onSave = async () => {
     setError('');
@@ -101,34 +102,16 @@ export default function OrderView() {
           order.orderdescription ?? order.orderDescription
         )}
       </p>
+
       <p><strong>Created: </strong>{new Date(order.createdat ?? order.createdAt).toLocaleString()}</p>
 
       <h3>Products</h3>
-      <ul className="product-list">
-        {(order.products || []).map(p => {
-          const pid = p.id;
-          return (
-            <li
-              key={pid}
-              className={selected.has(pid) ? 'selected' : ''}
-              onClick={() => editMode && toggle(pid)}
-            >
-              <label>
-                {editMode && (
-                  <input
-                    type="checkbox"
-                    checked={selected.has(pid)}
-                    onChange={() => toggle(pid)}
-                  />
-                )}
-                <span className="product-name">{p.productName ?? p.productname}</span>
-                <span className="product-desc">{p.productDescription ?? p.productdescription}</span>
-              </label>
-            </li>
-          );
-        })}
-        {(!order.products || order.products.length === 0) && <li>No products</li>}
-      </ul>
+      <ProductList
+        products={order.products}
+        selected={selected}
+        toggle={toggle}
+        editMode={editMode}
+      />
 
       <div className="actions">
         {editMode ? (
