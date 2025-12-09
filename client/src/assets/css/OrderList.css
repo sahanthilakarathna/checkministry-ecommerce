@@ -1,0 +1,98 @@
+.order-list-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  font-family: Arial, sans-serif;
+}
+
+.order-list-container h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.search-input {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 200px;
+  font-size: 14px;
+}
+
+button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-create {
+  background-color: #26c6da;
+  color: white;
+}
+
+.btn-create:hover {
+  background-color: #00acc1;
+}
+
+.order-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.order-grid th, .order-grid td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.order-grid th {
+  background-color: #f2f2f2;
+  color: #333;
+}
+
+.row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.row:hover {
+  background-color: #f9f9f9;
+}
+
+.btn-view {
+  background-color: #26a69a;
+  color: white;
+  margin-right: 8px;
+}
+
+.btn-view:hover {
+  background-color: #00897b;
+}
+
+.btn-delete {
+  background-color: #ef5350;
+  color: white;
+}
+
+.btn-delete:hover {
+  background-color: #e53935;
+}
+
+.loading {
+  text-align: center;
+  font-size: 16px;
+  color: #777;
+}
