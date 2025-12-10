@@ -61,70 +61,68 @@ async function createOrder(req, res) {
     return res.status(400).json({ error: 'orderDescription and productIds are required' });
   }
 
+  const client = await db.pool.connect();
   try {
-    await db.query('BEGIN');
-
-    const insertOrder = await db.query(
+    await client.query('BEGIN');
+    const insertOrder = await client.query(
       'INSERT INTO Orders (orderdescription, createdat) VALUES ($1, NOW()) RETURNING id, orderdescription, createdat',
       [orderdescription]
     );
-
     const orderId = insertOrder.rows[0].id;
 
-    await Promise.all(
-      productIds.map(pid =>
-        db.query(
-          'INSERT INTO OrderProductMap (orderid, productid) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-          [orderId, pid]
-        )
+    const insertPromises = productIds.map(pid =>
+      client.query(
+        'INSERT INTO OrderProductMap (orderid, productid) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+        [orderId, pid]
       )
     );
+    await Promise.all(insertPromises);
 
-    await db.query('COMMIT');
-    res.status(201).json(insertOrder.rows[0]);
+    await client.query('COMMIT');
+    res.status(201).json({ id: orderId, orderdescription: insertOrder.rows[0].orderdescription, createdAt: insertOrder.rows[0].createdat });
   } catch (err) {
-    await db.query('ROLLBACK');
+    await client.query('ROLLBACK');
     console.error('createOrder error:', err);
     res.status(500).json({ error: 'Failed to create order' });
+  } finally {
+    client.release();
   }
 }
-
 
 /**
  * PUT /api/orders/:id
  * Body: { orderDescription: string, productIds: number[] }
  */
 async function updateOrder(req, res) {
-  const id = +req.params.id;
+  const id = parseInt(req.params.id, 10);
   const { orderdescription, productIds } = req.body;
 
-  if (!orderdescription || !Array.isArray(productIds)) {
-    return res.status(400).json({ error: 'orderDescription and productIds required' });
-  }
+  if (Number.isNaN(id)) return res.status(400).json({ error: 'Invalid id' });
+  if (!orderdescription || !Array.isArray(productIds)) return res.status(400).json({ error: 'orderDescription and productIds required' });
 
+  const client = await db.pool.connect();
   try {
-    await db.query('BEGIN');
+    await client.query('BEGIN');
+    const up = await client.query('UPDATE Orders SET orderdescription=$1 WHERE id=$2 RETURNING id', [orderdescription, id]);
+    if (up.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Order not found' });
+    }
 
-    const up = await db.query(
-      'UPDATE Orders SET orderdescription=$1 WHERE id=$2 RETURNING id',
-      [orderdescription, id]
+    // Delete existing mappings and insert new ones
+    await client.query('DELETE FROM OrderProductMap WHERE orderid=$1', [id]);
+    const insertPromises = productIds.map(pid =>
+      client.query('INSERT INTO OrderProductMap (orderid, productid) VALUES ($1,$2)', [id, pid])
     );
-    if (up.rowCount === 0) return res.status(404).json({ error: 'Order not found' });
-
-    await db.query('DELETE FROM OrderProductMap WHERE orderid=$1', [id]);
-
-    await Promise.all(
-      productIds.map(pid =>
-        db.query('INSERT INTO OrderProductMap (orderid, productid) VALUES ($1,$2)', [id, pid])
-      )
-    );
-
-    await db.query('COMMIT');
+    await Promise.all(insertPromises);
+    await client.query('COMMIT');
     res.json({ message: 'Order updated' });
   } catch (err) {
-    await db.query('ROLLBACK');
+    await client.query('ROLLBACK');
     console.error('updateOrder error:', err);
     res.status(500).json({ error: 'Failed to update order' });
+  } finally {
+    client.release();
   }
 }
 
