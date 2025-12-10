@@ -9,19 +9,23 @@ export default function OrderCreate() {
   const [selected, setSelected] = useState(new Set());
   const [desc, setDesc] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const controller = new AbortController();
 
     const loadProducts = async () => {
+      setLoading(true);
       try {
         const data = await fetchProducts({ signal: controller.signal });
         setProducts(data);
+        setLoading(false);
       } catch (err) {
         if (err.name !== 'AbortError') {
           console.error(err);
           setError('Failed to load products');
+          setLoading(false);
         }
       }
     };
@@ -87,6 +91,7 @@ export default function OrderCreate() {
         selected={selected}
         toggle={toggle}
         editMode={true}
+        loading={loading}
       />
 
       <div className="actions">

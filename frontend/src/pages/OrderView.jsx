@@ -75,7 +75,7 @@ export default function OrderView() {
     }
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) return <div className="loading">Loading Order...</div>;
   if (!order) return <div className="not-found">Order not found</div>;
 
   return (
@@ -111,6 +111,7 @@ export default function OrderView() {
         selected={selected}
         toggle={toggle}
         editMode={editMode}
+        loading={loading}
       />
 
       <div className="actions">

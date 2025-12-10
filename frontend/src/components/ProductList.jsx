@@ -1,7 +1,8 @@
 import React from 'react';
 import '../assets/css/OrderView.css';
 
-export default function ProductList({ products, selected, toggle, editMode }) {
+export default function ProductList({ products, selected, toggle, editMode,loading }) {
+  if (loading) return <ul className="product-list"><li>Loading products...</li></ul>;
   if (!products || products.length === 0) return <ul className="product-list"><li>No products</li></ul>;
 
   return (

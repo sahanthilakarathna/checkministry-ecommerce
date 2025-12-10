@@ -10,21 +10,19 @@ export default function OrderList() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    let isMounted = true;
     const loadOrders = async () => {
       try {
         setLoading(true);
         const data = await fetchOrders();
-        if (isMounted) setOrders(data);
+        setOrders(data);
       } catch (err) {
         console.error(err);
-        if (isMounted) alert('Failed to load orders');
+        alert('Failed to load orders');
       } finally {
-        if (isMounted) setLoading(false);
+         setLoading(false);
       }
     };
     loadOrders();
-    return () => { isMounted = false; };
   }, []);
 
   const filtered = q
@@ -63,7 +61,7 @@ export default function OrderList() {
       </div>
 
       {loading ? (
-        <div className="loading">Loading...</div>
+        <div className="loading">Loading Orders...</div>
       ) : (
         <table className="order-grid">
           <thead>
