@@ -28,7 +28,7 @@ export default function OrderCreate() {
 
     loadProducts();
 
-    return () => controller.abort(); // cancel fetch if unmounted
+    return () => controller.abort();
   }, []);
 
   const toggle = useCallback((id) => {
@@ -86,7 +86,7 @@ export default function OrderCreate() {
         products={products}
         selected={selected}
         toggle={toggle}
-        editMode={true} // always selectable in create mode
+        editMode={true}
       />
 
       <div className="actions">

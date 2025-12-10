@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchOrders, deleteOrder } from '../api';
 import { useNavigate } from 'react-router-dom';
-import '../assets/css/OrderList.css'; // import the CSS
+import '../assets/css/OrderList.css';
 
 export default function OrderList() {
   const [orders, setOrders] = useState([]);
