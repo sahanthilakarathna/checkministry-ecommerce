@@ -109,7 +109,7 @@ async function updateOrder(req, res) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    // Delete existing mappings and insert new ones
+    
     await client.query('DELETE FROM OrderProductMap WHERE orderid=$1', [id]);
     const insertPromises = productIds.map(pid =>
       client.query('INSERT INTO OrderProductMap (orderid, productid) VALUES ($1,$2)', [id, pid])
